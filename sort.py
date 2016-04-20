@@ -35,14 +35,9 @@ def compare_time(str1='', str2=''):
     return 0
 
 class path_node(object):
-    def __init__(self, rindex=-1, fd=None, str_path=''):
+    def __init__(self, rindex=-1, str_path=''):
         self.index = rindex # k th road
-        self.filehandle = fd  # file handler
         self.path = str_path  # full path which is used to create filehandle
-    def clear(self):
-        self.road_idx = -1
-        self.fd = None
-        self.path = ''
     def __lt__(self, other):
         return compare_time(self.path, other.path) < 0
     def __eq__(self, other):
@@ -122,7 +117,7 @@ def kmerge(lists, date=''):
                 if record == '':
                     break
                 #print(record)
-                kroad_list[j].append(path_node(j, files[j], record))
+                kroad_list[j].append(path_node(j, record))
             except:
                 break
 
@@ -147,7 +142,7 @@ def kmerge(lists, date=''):
                 line = fd_list[j].readline().strip('\n')
                 if line == '':
                     continue
-                kroad_list[j].append(path_node(j, files[j] , line))
+                kroad_list[j].append(path_node(j, line))
             except:
                 empty_file -= 1
                 continue
@@ -163,7 +158,7 @@ def kmerge(lists, date=''):
                     line = fd_list[pop_index].readline().strip('\n')
                     if line == '':
                         break
-                    kroad_list[pop_index].append(path_node(pop_index, files[pop_index], ))
+                    kroad_list[pop_index].append(path_node(pop_index, line))
                     heapq.heappush(priority, kroad_list[pop_index].popleft())
                 except:
                     break
@@ -199,4 +194,3 @@ filelist = getAllFiles() # filelist 是一个包含完整路径的 list
 datedict = daytoFiles(filelist) #datedict 是一个包含 日期-列表 的键值对
 for eachday in datedict.items():
     merge(eachday[0], eachday[1])
-print('Complete')
