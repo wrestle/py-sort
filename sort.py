@@ -1,8 +1,8 @@
-
 import os
-import random
+import shutil
 import heapq
 from collections import deque
+
 # str1, str2 : 15:58:00.364521
 # 返回值
 def compare_time(str1='', str2=''):
@@ -58,7 +58,7 @@ def getAllFiles(path=None):
     curFiles = os.listdir(curDir)
     for x in curFiles:
         x = os.path.join(curDir, x)
-        if os.path.isfile(x) and x != '..' and x != '.':
+        if os.path.isfile(x) and getfilename(x) != os.path.basename(__file__):
             retlist.append(x)
             #print(x)
     #print(retlist)
@@ -79,7 +79,7 @@ def getfiledate(filename):
 # 得到 日期-路径 的映射集合
 def daytoFiles(fileSet):
     dayset = {}
-    print(fileSet)
+    #print(fileSet)
     for x in fileSet:
         filename = getfilename(x)
         filedate = getfiledate(filename)
@@ -91,6 +91,7 @@ def daytoFiles(fileSet):
 def add_head_date(date, filename):
     pass
 
+tmpfiles = []
 # 合并的具体实现， k(=10)路归并
 def kmerge(lists, date=''):
     if date != '':
@@ -120,7 +121,7 @@ def kmerge(lists, date=''):
                 record = fd_list[j].readline().strip('\n')
                 if record == '':
                     break
-                print(record)
+                #print(record)
                 kroad_list[j].append(path_node(j, files[j], record))
             except:
                 break
@@ -131,6 +132,7 @@ def kmerge(lists, date=''):
     while os.path.exists(merge_path):
         x += str(1)
         merge_path = os.path.join(os.getcwd(), x)
+    tmpfiles.append(merge_path)
     merge_fd = open(merge_path, 'a')
 
     priority = []
@@ -165,13 +167,13 @@ def kmerge(lists, date=''):
                     heapq.heappush(priority, kroad_list[pop_index].popleft())
                 except:
                     break
-        print('pop index: %d ' %pop_index, ' for %s' %pop.path)
+        #print('pop index: %d ' %pop_index, ' for %s' %pop.path)
         merge_fd.write(date + pop.path + '\n')
     # 关闭文件
     for j in range(0, i):
         fd_list[j].close()
     merge_fd.close()
-    return lists
+    return merge_path
 
 # 合并文件
 def merge(date, pathlist=list()):
@@ -181,10 +183,20 @@ def merge(date, pathlist=list()):
     while len(pathlist) > 0:
         merge_list.append(kmerge(pathlist, date))
     # 假设有21个同日期的文件，就会有3个已经带日期的文件生成
-    while len(merge_list) > 1:
+    while True:
+        if (len(merge_list) <= 1):
+            src = merge_list.pop()
+            dst = os.path.join('..', os.path.join('输出', date + '.txt'))
+            if os.path.exists(dst):
+                os.remove(dst)
+            shutil.copy(src, dst)
+            break
         merge_list.append(kmerge(merge_list))
+    while len(tmpfiles) > 0:
+        os.remove(tmpfiles.pop())
 
 filelist = getAllFiles() # filelist 是一个包含完整路径的 list
 datedict = daytoFiles(filelist) #datedict 是一个包含 日期-列表 的键值对
 for eachday in datedict.items():
     merge(eachday[0], eachday[1])
+print('Complete')
